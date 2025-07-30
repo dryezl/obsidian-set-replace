@@ -1,53 +1,87 @@
-# Obsidian Sample Plugin
+# Set Replace - Obsidian Plugin
 
-This is a sample plugin for Obsidian (https://obsidian.md).
+An Obsidian plugin that allows you to replace predefined characters or strings with other characters or strings throughout your notes.
 
-This project uses TypeScript to provide type checking and documentation.
-The repo depends on the latest plugin API (obsidian.d.ts) in TypeScript Definition format, which contains TSDoc comments describing what it does.
+## Features
 
-This sample plugin demonstrates some of the basic functionality the plugin API can do.
-- Adds a ribbon icon, which shows a Notice when clicked.
-- Adds a command "Open Sample Modal" which opens a Modal.
-- Adds a plugin setting tab to the settings page.
-- Registers a global click event and output 'click' to the console.
-- Registers a global interval which logs 'setInterval' to the console.
+- **Character/String Replacement**: Configure multiple character or string mappings that can be replaced with a single command
+- **Configurable Mappings**: Add, edit, and remove character mappings through the plugin settings
+- **Flexible**: Works with single characters, multi-character strings, or even special characters
+- **Easy to Use**: Simply run the "Replace predefined characters" command from the command palette
 
-## First time developing plugins?
+## How to Use
 
-Quick starting guide for new plugin devs:
+### Setting Up Character Mappings
 
-- Check if [someone already developed a plugin for what you want](https://obsidian.md/plugins)! There might be an existing plugin similar enough that you can partner up with.
-- Make a copy of this repo as a template with the "Use this template" button (login to GitHub if you don't see it).
-- Clone your repo to a local development folder. For convenience, you can place this folder in your `.obsidian/plugins/your-plugin-name` folder.
-- Install NodeJS, then run `npm i` in the command line under your repo folder.
-- Run `npm run dev` to compile your plugin from `main.ts` to `main.js`.
-- Make changes to `main.ts` (or create new `.ts` files). Those changes should be automatically compiled into `main.js`.
-- Reload Obsidian to load the new version of your plugin.
-- Enable plugin in settings window.
-- For updates to the Obsidian API run `npm update` in the command line under your repo folder.
+1. Go to **Settings** → **Community Plugins** → **Set Replace**
+2. In the settings panel, you'll see a list of character mappings
+3. For each mapping:
+   - **From**: Enter the character(s) or string you want to replace
+   - **To**: Enter the replacement character(s) or string
+4. Click **Add** to create new mappings
+5. Click **Delete** to remove unwanted mappings (at least one mapping must remain)
 
-## Releasing new releases
+### Replacing Characters
 
-- Update your `manifest.json` with your new version number, such as `1.0.1`, and the minimum Obsidian version required for your latest release.
-- Update your `versions.json` file with `"new-plugin-version": "minimum-obsidian-version"` so older versions of Obsidian can download an older version of your plugin that's compatible.
-- Create new GitHub release using your new version number as the "Tag version". Use the exact version number, don't include a prefix `v`. See here for an example: https://github.com/obsidianmd/obsidian-sample-plugin/releases
-- Upload the files `manifest.json`, `main.js`, `styles.css` as binary attachments. Note: The manifest.json file must be in two places, first the root path of your repository and also in the release.
-- Publish the release.
+1. Open the note where you want to replace characters
+2. Open the Command Palette (`Ctrl/Cmd + P`)
+3. Search for and run **"Replace predefined characters"**
+4. The plugin will replace all instances of your configured "from" strings with their "to" replacements
+5. You'll see a notice showing how many replacements were made
 
-> You can simplify the version bump process by running `npm version patch`, `npm version minor` or `npm version major` after updating `minAppVersion` manually in `manifest.json`.
-> The command will bump version in `manifest.json` and `package.json`, and add the entry for the new version to `versions.json`
+## Examples
 
-## Adding your plugin to the community plugin list
+Here are some example use cases:
 
-- Check the [plugin guidelines](https://docs.obsidian.md/Plugins/Releasing/Plugin+guidelines).
-- Publish an initial version.
-- Make sure you have a `README.md` file in the root of your repo.
-- Make a pull request at https://github.com/obsidianmd/obsidian-releases to add your plugin.
+- **Smart Quotes**: Replace straight quotes (`"`) with curly quotes (`"` and `"`)
+- **Dashes**: Replace double hyphens (`--`) with em dashes (`—`)
+- **Special Characters**: Replace `(c)` with `©` or `(tm)` with `™`
+- **Language Characters**: Replace ASCII characters with accented characters
+- **Abbreviations**: Replace common abbreviations with full words
 
-## How to use
+## Installation
 
-- Clone this repo.
-- Make sure your NodeJS is at least v16 (`node --version`).
+### From Obsidian Community Plugins (Recommended)
+*Coming soon - this plugin is not yet available in the community plugin directory*
+
+### Manual Installation
+1. Download the latest release from GitHub
+2. Extract the `main.js`, `manifest.json`, and `styles.css` files
+3. Create a folder named `set-replace` in your `.obsidian/plugins/` directory
+4. Place the extracted files in the `set-replace` folder
+5. Reload Obsidian and enable the plugin in Settings → Community Plugins
+
+## Development
+
+This plugin is built with TypeScript and uses the Obsidian Plugin API.
+
+### Building from Source
+```bash
+# Clone the repository
+git clone https://github.com/dryezl/obsidian-set-replace.git
+cd obsidian-set-replace
+
+# Install dependencies
+npm install
+
+# Build the plugin
+npm run build
+
+# For development with auto-rebuild
+npm run dev
+```
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit issues and pull requests.
+
+## License
+
+MIT License - see [LICENSE](LICENSE) for details.
+
+## Support
+
+If you find this plugin helpful, consider supporting its development!
 - `npm i` or `yarn` to install dependencies.
 - `npm run dev` to start compilation in watch mode.
 

@@ -1,85 +1,69 @@
-import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
+import { App, Editor, MarkdownView, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
 
-// Remember to rename these classes and interfaces!
-
-interface MyPluginSettings {
-	mySetting: string;
+interface CharacterMapping {
+	from: string;
+	to: string;
 }
 
-const DEFAULT_SETTINGS: MyPluginSettings = {
-	mySetting: 'default'
+interface SetReplaceSettings {
+	characterMappings: CharacterMapping[];
 }
 
-export default class MyPlugin extends Plugin {
-	settings: MyPluginSettings;
+const DEFAULT_SETTINGS: SetReplaceSettings = {
+	characterMappings: [
+		{ from: '', to: '' }
+	]
+}
+
+export default class SetReplacePlugin extends Plugin {
+	settings: SetReplaceSettings;
 
 	async onload() {
 		await this.loadSettings();
 
-		// This creates an icon in the left ribbon.
-		const ribbonIconEl = this.addRibbonIcon('dice', 'Sample Plugin', (evt: MouseEvent) => {
-			// Called when the user clicks the icon.
-			new Notice('This is a notice!');
-		});
-		// Perform additional things with the ribbon
-		ribbonIconEl.addClass('my-plugin-ribbon-class');
-
-		// This adds a status bar item to the bottom of the app. Does not work on mobile apps.
-		const statusBarItemEl = this.addStatusBarItem();
-		statusBarItemEl.setText('Status Bar Text');
-
-		// This adds a simple command that can be triggered anywhere
+		// Add command to replace characters in the current editor
 		this.addCommand({
-			id: 'open-sample-modal-simple',
-			name: 'Open sample modal (simple)',
-			callback: () => {
-				new SampleModal(this.app).open();
-			}
-		});
-		// This adds an editor command that can perform some operation on the current editor instance
-		this.addCommand({
-			id: 'sample-editor-command',
-			name: 'Sample editor command',
+			id: 'replace-characters',
+			name: 'Replace predefined characters',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
-				console.log(editor.getSelection());
-				editor.replaceSelection('Sample Editor Command');
+				this.replaceCharacters(editor);
 			}
 		});
-		// This adds a complex command that can check whether the current state of the app allows execution of the command
-		this.addCommand({
-			id: 'open-sample-modal-complex',
-			name: 'Open sample modal (complex)',
-			checkCallback: (checking: boolean) => {
-				// Conditions to check
-				const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
-				if (markdownView) {
-					// If checking is true, we're simply "checking" if the command can be run.
-					// If checking is false, then we want to actually perform the operation.
-					if (!checking) {
-						new SampleModal(this.app).open();
-					}
 
-					// This command will only show up in Command Palette when the check function returns true
-					return true;
+		// This adds a settings tab so the user can configure character mappings
+		this.addSettingTab(new SetReplaceSettingTab(this.app, this));
+	}
+
+	replaceCharacters(editor: Editor) {
+		const content = editor.getValue();
+		let newContent = content;
+		let replacementCount = 0;
+
+		this.settings.characterMappings.forEach(mapping => {
+			if (mapping.from && mapping.to) {
+				const regex = new RegExp(this.escapeRegExp(mapping.from), 'g');
+				const matches = newContent.match(regex);
+				if (matches) {
+					replacementCount += matches.length;
+					newContent = newContent.replace(regex, mapping.to);
 				}
 			}
 		});
 
-		// This adds a settings tab so the user can configure various aspects of the plugin
-		this.addSettingTab(new SampleSettingTab(this.app, this));
+		if (replacementCount > 0) {
+			editor.setValue(newContent);
+			new Notice(`Replaced ${replacementCount} character(s)`);
+		} else {
+			new Notice('No characters found to replace');
+		}
+	}
 
-		// If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
-		// Using this function will automatically remove the event listener when this plugin is disabled.
-		this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
-			console.log('click', evt);
-		});
-
-		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
-		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
+	escapeRegExp(string: string): string {
+		return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 	}
 
 	onunload() {
-
+		// Clean up if needed
 	}
 
 	async loadSettings() {
@@ -91,44 +75,71 @@ export default class MyPlugin extends Plugin {
 	}
 }
 
-class SampleModal extends Modal {
-	constructor(app: App) {
-		super(app);
-	}
+class SetReplaceSettingTab extends PluginSettingTab {
+	plugin: SetReplacePlugin;
 
-	onOpen() {
-		const {contentEl} = this;
-		contentEl.setText('Woah!');
-	}
-
-	onClose() {
-		const {contentEl} = this;
-		contentEl.empty();
-	}
-}
-
-class SampleSettingTab extends PluginSettingTab {
-	plugin: MyPlugin;
-
-	constructor(app: App, plugin: MyPlugin) {
+	constructor(app: App, plugin: SetReplacePlugin) {
 		super(app, plugin);
 		this.plugin = plugin;
 	}
 
 	display(): void {
-		const {containerEl} = this;
+		const { containerEl } = this;
 
 		containerEl.empty();
 
+		containerEl.createEl('h2', { text: 'Character Replacement Settings' });
+
+		containerEl.createEl('p', {
+			text: 'Configure character mappings. Each row defines a character or string to be replaced with another character or string.'
+		});
+
+		// Add button to add new mapping
 		new Setting(containerEl)
-			.setName('Setting #1')
-			.setDesc('It\'s a secret')
-			.addText(text => text
-				.setPlaceholder('Enter your secret')
-				.setValue(this.plugin.settings.mySetting)
+			.setName('Add new mapping')
+			.setDesc('Add a new character replacement mapping')
+			.addButton(button => button
+				.setButtonText('Add')
+				.setCta()
+				.onClick(() => {
+					this.plugin.settings.characterMappings.push({ from: '', to: '' });
+					this.plugin.saveSettings();
+					this.display(); // Refresh the display
+				}));
+
+		// Display existing mappings
+		this.plugin.settings.characterMappings.forEach((mapping, index) => {
+			const setting = new Setting(containerEl)
+				.setName(`Mapping ${index + 1}`)
+				.setDesc('Replace "from" with "to"');
+
+			setting.addText(text => text
+				.setPlaceholder('Character(s) to replace')
+				.setValue(mapping.from)
 				.onChange(async (value) => {
-					this.plugin.settings.mySetting = value;
+					this.plugin.settings.characterMappings[index].from = value;
 					await this.plugin.saveSettings();
 				}));
+
+			setting.addText(text => text
+				.setPlaceholder('Replacement character(s)')
+				.setValue(mapping.to)
+				.onChange(async (value) => {
+					this.plugin.settings.characterMappings[index].to = value;
+					await this.plugin.saveSettings();
+				}));
+
+			// Add delete button for this mapping (but keep at least one)
+			if (this.plugin.settings.characterMappings.length > 1) {
+				setting.addButton(button => button
+					.setButtonText('Delete')
+					.setWarning()
+					.onClick(() => {
+						this.plugin.settings.characterMappings.splice(index, 1);
+						this.plugin.saveSettings();
+						this.display(); // Refresh the display
+					}));
+			}
+		});
 	}
 }
